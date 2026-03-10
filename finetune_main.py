@@ -16,7 +16,7 @@ from experiments.fine_tune import (
 )
 
 device = "cuda" if torch.cuda.is_available() else "cpu"
-
+torch.backends.cudnn.benchmark = True
 train_loader, val_loader, num_classes = get_dataloaders("dataset")
 
 models_to_run = [

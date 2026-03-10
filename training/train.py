@@ -12,6 +12,8 @@ def train_one_epoch(model, loader, optimizer, criterion, device):
 
     grad_norm_epoch = 0
 
+    scaler = torch.cuda.amp.GradScaler()
+
     for images, labels in tqdm(loader):
 
         images = images.to(device)
@@ -19,21 +21,24 @@ def train_one_epoch(model, loader, optimizer, criterion, device):
 
         optimizer.zero_grad()
 
-        outputs = model(images)
+        with torch.cuda.amp.autocast():
 
-        loss = criterion(outputs, labels)
+            outputs = model(images)
 
-        loss.backward()
+            loss = criterion(outputs, labels)
+
+        scaler.scale(loss).backward()
 
         grad_norm = 0
 
         for p in model.parameters():
             if p.grad is not None:
-                grad_norm += p.grad.norm().item()
+                grad_norm += p.grad.detach().norm(2).item()
 
         grad_norm_epoch += grad_norm
 
-        optimizer.step()
+        scaler.step(optimizer)
+        scaler.update()
 
         total_loss += loss.item()
 
