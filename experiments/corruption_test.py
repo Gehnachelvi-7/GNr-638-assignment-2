@@ -1,3 +1,7 @@
+import sys
+import os
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
 import torch
 import torchvision.transforms as transforms
 from torchvision.datasets import ImageFolder
@@ -6,17 +10,11 @@ import torchvision.transforms.functional as F
 import numpy as np
 import pandas as pd
 from PIL import Image, ImageFilter
-import os
 
 from models.model_loader import load_model
 
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-
-
-# -------------------------------------------------------
-# Corruption Functions
-# -------------------------------------------------------
 
 def add_gaussian_noise(img, sigma):
     img = np.array(img) / 255.0
@@ -34,10 +32,6 @@ def apply_motion_blur(img, radius=5):
 def apply_brightness_shift(img, factor):
     return F.adjust_brightness(img, factor)
 
-
-# -------------------------------------------------------
-# Dataset Wrapper with Corruption
-# -------------------------------------------------------
 
 class CorruptedDataset(torch.utils.data.Dataset):
 
@@ -74,10 +68,6 @@ class CorruptedDataset(torch.utils.data.Dataset):
         return img, label
 
 
-# -------------------------------------------------------
-# Accuracy Evaluation
-# -------------------------------------------------------
-
 def evaluate_model(model, loader):
 
     model.eval()
@@ -101,10 +91,6 @@ def evaluate_model(model, loader):
 
     return correct / total
 
-
-# -------------------------------------------------------
-# Main Evaluation
-# -------------------------------------------------------
 
 def run_corruption_tests():
 
