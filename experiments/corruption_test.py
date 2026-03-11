@@ -16,6 +16,7 @@ from models.model_loader import load_model
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
+
 def add_gaussian_noise(img, sigma):
     img = np.array(img) / 255.0
     noise = np.random.normal(0, sigma, img.shape)
@@ -94,7 +95,7 @@ def evaluate_model(model, loader):
 
 def run_corruption_tests():
 
-    dataset_path = "dataset/val"
+    dataset_path = "dataset"
 
     batch_size = 32
 
@@ -103,7 +104,7 @@ def run_corruption_tests():
     models = [
         ("resnet50", "resnet50_full_finetune.pth"),
         ("densenet121", "densenet121_full_finetune.pth"),
-        ("efficientnet_b0", "efficientnet_b0_full_finetune.pth")
+        ("efficientnet_b0", "efficientnet_b0_last_block.pth")
     ]
 
     corruptions = {
@@ -116,15 +117,18 @@ def run_corruption_tests():
 
     for model_name, weight in models:
 
-        print("Evaluating:", model_name)
+        print("\nEvaluating:", model_name)
 
         model = load_model(model_name, num_classes=30)
-        model.load_state_dict(torch.load(weight))
+
+        model.load_state_dict(
+            torch.load(weight, map_location=device)
+        )
+
         model.to(device)
 
-        # clean accuracy
         clean_dataset = CorruptedDataset(dataset_path)
-        clean_loader = DataLoader(clean_dataset,batch_size=batch_size)
+        clean_loader = DataLoader(clean_dataset, batch_size=batch_size)
 
         clean_acc = evaluate_model(model, clean_loader)
 
@@ -136,7 +140,7 @@ def run_corruption_tests():
 
                 dataset = CorruptedDataset(dataset_path, corruption, level)
 
-                loader = DataLoader(dataset,batch_size=batch_size)
+                loader = DataLoader(dataset, batch_size=batch_size)
 
                 acc = evaluate_model(model, loader)
 
@@ -146,12 +150,12 @@ def run_corruption_tests():
 
                 results.append({
 
-                    "model":model_name,
-                    "corruption":corruption,
-                    "level":level,
-                    "accuracy":acc,
-                    "corruption_error":corruption_error,
-                    "relative_robustness":relative_robustness
+                    "model": model_name,
+                    "corruption": corruption,
+                    "level": level,
+                    "accuracy": acc,
+                    "corruption_error": corruption_error,
+                    "relative_robustness": relative_robustness
 
                 })
 
@@ -161,7 +165,7 @@ def run_corruption_tests():
 
     df.to_csv("corruption_results.csv", index=False)
 
-    print("Results saved")
+    print("\nResults saved locally")
 
 
 if __name__ == "__main__":
