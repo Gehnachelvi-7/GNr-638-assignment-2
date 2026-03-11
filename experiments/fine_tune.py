@@ -1,6 +1,5 @@
 import torch
 
-
 def linear_probe(model):
 
     for name, param in model.named_parameters():
