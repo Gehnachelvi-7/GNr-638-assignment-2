@@ -101,7 +101,7 @@ def run_corruption_tests():
 
     dataset_path = "dataset"
 
-    batch_size = 32
+    batch_size = 64
 
     results = []
 
@@ -132,7 +132,7 @@ def run_corruption_tests():
         model.to(device)
 
         clean_dataset = CorruptedDataset(dataset_path)
-        clean_loader = DataLoader(clean_dataset, batch_size=batch_size, num_workers=2, pin_memory=True)
+        clean_loader = DataLoader(clean_dataset, batch_size=batch_size, num_workers=4, pin_memory=True)
 
         clean_acc = evaluate_model(model, clean_loader)
 
@@ -144,7 +144,7 @@ def run_corruption_tests():
 
                 dataset = CorruptedDataset(dataset_path, corruption, level)
 
-                loader = DataLoader(dataset, batch_size=batch_size, num_workers=2, pin_memory=True)
+                loader = DataLoader(dataset, batch_size=batch_size, num_workers=4, pin_memory=True)
 
                 acc = evaluate_model(model, loader)
 
