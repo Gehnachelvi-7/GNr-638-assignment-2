@@ -45,7 +45,11 @@ class CorruptedDataset(torch.utils.data.Dataset):
 
         self.transform = transforms.Compose([
             transforms.Resize((224,224)),
-            transforms.ToTensor()
+            transforms.ToTensor(),
+            transforms.Normalize(
+                mean=[0.485, 0.456, 0.406],
+                std=[0.229, 0.224, 0.225]
+            )
         ])
 
     def __len__(self):
@@ -82,7 +86,6 @@ def evaluate_model(model, loader):
 
             images = images.to(device)
             labels = labels.to(device)
-
             outputs = model(images)
 
             _, preds = torch.max(outputs, 1)
@@ -128,7 +131,7 @@ def run_corruption_tests():
         model.to(device)
 
         clean_dataset = CorruptedDataset(dataset_path)
-        clean_loader = DataLoader(clean_dataset, batch_size=batch_size)
+        clean_loader = DataLoader(clean_dataset, batch_size=batch_size, num_workers=2, pin_memory=True)
 
         clean_acc = evaluate_model(model, clean_loader)
 
