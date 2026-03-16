@@ -12,17 +12,18 @@ import pandas as pd
 from PIL import Image, ImageFilter
 
 from models.model_loader import load_model
+torch.backends.cudnn.benchmark = True
 
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 
 def add_gaussian_noise(img, sigma):
-    img = np.array(img) / 255.0
-    noise = np.random.normal(0, sigma, img.shape)
+    img = np.array(img).astype(np.float32)
+    noise = np.random.normal(0, sigma * 255, img.shape)
     img = img + noise
-    img = np.clip(img, 0, 1)
-    img = (img * 255).astype(np.uint8)
+    img = np.clip(img, 0, 255)
+    img = img.astype(np.uint8)
     return Image.fromarray(img)
 
 
@@ -143,7 +144,7 @@ def run_corruption_tests():
 
                 dataset = CorruptedDataset(dataset_path, corruption, level)
 
-                loader = DataLoader(dataset, batch_size=batch_size)
+                loader = DataLoader(dataset, batch_size=batch_size, num_workers=2, pin_memory=True)
 
                 acc = evaluate_model(model, loader)
 
@@ -159,10 +160,9 @@ def run_corruption_tests():
                     "accuracy": acc,
                     "corruption_error": corruption_error,
                     "relative_robustness": relative_robustness
-
                 })
 
-                print(model_name, corruption, level, acc)
+                print(f"{model_name} | {corruption} | level {level} | accuracy {acc:.4f}")
 
     df = pd.DataFrame(results)
 
